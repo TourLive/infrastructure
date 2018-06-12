@@ -1,0 +1,56 @@
+version: '2.1'
+services:
+  frontend-dev:
+    image: tourlive/frontend:latest
+    networks:
+      - internal
+      - proxy
+    labels:
+      - traefik.backend=frontend-dev
+      - traefik.frontend.rule=Host:dev-frontend.tourlive.ch
+      - traefik.docker.network=proxy
+      - traefik.port=80
+    depends_on:
+      - api-dev  
+  api-dev:
+    image: tourlive/api:latest
+    labels:
+      - traefik.backend=api-dev
+      - traefik.frontend.rule=Host:dev-api.tourlive.ch
+      - traefik.docker.network=proxy
+      - traefik.port=9000
+    networks:
+      - internal
+      - proxy
+    environment:
+      - TOURLIVE_DBUSER=${TOURLIVE_DBUSER}
+      - TOURLIVE_DBPASSWORD=${TOURLIVE_DBPASSWORD}
+      - TOURLIVE_DBURL=${TOURLIVE_DBDEVURL}
+      - TOURLIVE_API_SECRET=${TOURLIVE_API_SECRET}
+      - TOURLIVE_HOSTNAME=${TOURLIVE_HOSTNAME}
+    depends_on:
+      database-dev:
+        condition: service_healthy
+  database-dev:
+    restart: always
+    labels:
+      - traefik.enable=false
+    networks:
+      - internal
+    image: postgres:9.6
+    environment:
+      - POSTGRES_USER=${TOURLIVE_DBUSER}
+      - POSTGRES_PASSWORD=${TOURLIVE_DBPASSWORD}
+      - POSTGRES_DB=${TOURLIVE_DBNAME}
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 30s
+      timeout: 30s
+      retries: 3  
+    volumes:
+      - /data/postgres-dev:/var/lib/postgresql
+networks:
+  proxy:
+    external: true
+  internal:
+    external: false

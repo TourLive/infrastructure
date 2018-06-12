@@ -1,0 +1,18 @@
+version: '2.1'
+services:
+  admin:
+    image: tourlive/admin:latest
+    mem_limit: 128m
+    networks:
+      - internal
+      - proxy
+    labels:
+      - traefik.backend=admin
+      - traefik.frontend.rule=Host:admin.tourlive.ch
+      - traefik.docker.network=proxy
+      - traefik.port=80
+networks:
+  proxy:
+    external: true
+  internal:
+    external: false

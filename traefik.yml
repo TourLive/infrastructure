@@ -1,0 +1,25 @@
+version: '2.1'
+
+services:
+  traefik:
+    image: traefik:1.5.4
+    mem_limit: 1024m
+    restart: always
+    ports:
+      - 80:80
+      - 443:443
+      - 8080:8080
+    labels:
+      - traefik.frontend.rule=Host:sinv-56034.edu.hsr.ch
+      - traefik.port=8080
+    networks:
+      - proxy
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /opt/tourlive/traefik.toml:/traefik.toml
+      - /opt/tourlive/acme.json:/acme.json
+    container_name: traefik
+
+networks:
+  proxy:
+    external: true
